@@ -1,0 +1,382 @@
+/* ===== RESET & BASE ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f0f4f8;
+  color: #2d3748;
+  min-height: 100vh;
+}
+
+/* ===== HEADER ===== */
+header {
+  background: #2b6cb0;
+  color: white;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+header h1 {
+  font-size: 1.4rem;
+}
+
+/* Groups the counter + buttons on the right side */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#task-counter {
+  font-size: 0.85rem;
+  background: rgba(255,255,255,0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+/* Dark Mode and Export buttons in the header */
+#dark-mode-btn,
+#export-btn {
+  padding: 6px 14px;
+  border: 2px solid white;
+  background: transparent;
+  color: white;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+#dark-mode-btn:hover,
+#export-btn:hover {
+  background: white;
+  color: #2b6cb0;
+}
+
+/* ===== TIER 4: DARK MODE ===== */
+/* All dark mode overrides live here — toggled by adding "dark" class to <body> */
+body.dark {
+  background: #1a202c;
+  color: #e2e8f0;
+}
+
+body.dark header {
+  background: #2d3748;
+}
+
+body.dark .add-task-section,
+body.dark .task-item {
+  background: #2d3748;
+  color: #e2e8f0;
+}
+
+body.dark #task-form input,
+body.dark #task-form select,
+body.dark .filter-section input,
+body.dark .filter-section select,
+body.dark .task-edit-input,
+body.dark .timer-input {
+  background: #4a5568;
+  color: #e2e8f0;
+  border-color: #718096;
+}
+
+body.dark .task-text {
+  color: #e2e8f0;
+}
+
+body.dark .task-item.completed .task-text {
+  color: #718096;
+}
+
+body.dark .btn-delete {
+  background: #742a2a;
+  color: #fed7d7;
+}
+
+body.dark .btn-timer {
+  background: #2c5282;
+  color: #bee3f8;
+  border-color: #2b6cb0;
+}
+
+body.dark .category-tag {
+  background: #2c5282;
+  color: #bee3f8;
+}
+
+body.dark #dark-mode-btn,
+body.dark #export-btn {
+  border-color: #e2e8f0;
+  color: #e2e8f0;
+}
+
+body.dark #dark-mode-btn:hover,
+body.dark #export-btn:hover {
+  background: #e2e8f0;
+  color: #2d3748;
+}
+
+/* ===== NOTIFICATION ===== */
+.notification {
+  background: #38a169;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  font-size: 0.9rem;
+  transition: opacity 0.3s;
+}
+
+.notification.hidden {
+  display: none;
+}
+
+/* ===== MAIN LAYOUT ===== */
+main {
+  max-width: 700px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+/* ===== ADD TASK SECTION ===== */
+.add-task-section {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 16px;
+}
+
+#task-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#task-form input[type="text"] {
+  flex: 1 1 200px;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+#task-form input[type="text"]:focus {
+  border-color: #2b6cb0;
+}
+
+#task-form select {
+  padding: 10px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+  cursor: pointer;
+}
+
+#task-form button {
+  padding: 10px 20px;
+  background: #2b6cb0;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#task-form button:hover {
+  background: #2c5282;
+}
+
+/* ===== FILTER SECTION ===== */
+.filter-section {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-section input,
+.filter-section select {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+  flex: 1 1 150px;
+  outline: none;
+}
+
+/* ===== LOADING ===== */
+#loading {
+  text-align: center;
+  padding: 12px;
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+#loading.hidden {
+  display: none;
+}
+
+/* ===== TASK LIST ===== */
+#task-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ===== INDIVIDUAL TASK ITEM ===== */
+.task-item {
+  background: white;
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-left: 5px solid #cbd5e0;
+  transition: opacity 0.2s;
+}
+
+/* Priority border colors */
+.task-item.priority-high  { border-left-color: #e53e3e; }
+.task-item.priority-medium { border-left-color: #d69e2e; }
+.task-item.priority-low   { border-left-color: #38a169; }
+
+/* Completed task looks faded */
+.task-item.completed {
+  opacity: 0.55;
+}
+
+.task-item.completed .task-text {
+  text-decoration: line-through;
+  color: #a0aec0;
+}
+
+/* Top row: checkbox + text + buttons */
+.task-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-top input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #2b6cb0;
+}
+
+/* Task text — double-click to edit */
+.task-text {
+  flex: 1;
+  font-size: 1rem;
+  cursor: pointer;
+  word-break: break-word;
+}
+
+/* Inline edit input (shown on double-click) */
+.task-edit-input {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid #2b6cb0;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+/* Action buttons: delete */
+.btn-delete {
+  background: #fed7d7;
+  color: #c53030;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+
+.btn-delete:hover {
+  background: #fc8181;
+}
+
+/* Bottom row: category tag + timer area */
+.task-bottom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Category color badge */
+.category-tag {
+  font-size: 0.75rem;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: #bee3f8;
+  color: #2b6cb0;
+  font-weight: 600;
+}
+
+/* ===== TIMER AREA ===== */
+.timer-area {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.timer-display {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #2d3748;
+  min-width: 55px;
+  text-align: center;
+}
+
+/* Timer buttons */
+.btn-timer {
+  background: #ebf8ff;
+  color: #2b6cb0;
+  border: 1px solid #bee3f8;
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-timer:hover {
+  background: #bee3f8;
+}
+
+/* Timer input (set seconds) */
+.timer-input {
+  width: 55px;
+  padding: 4px 6px;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+/* Timer turns red when time is almost up */
+.timer-display.urgent {
+  color: #e53e3e;
+}

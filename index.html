@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Task Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header>
+    <h1>📋 Task Manager</h1>
+    <div class="header-right">
+      <div id="task-counter">Total: 0 | Done: 0 | Pending: 0</div>
+      <!-- Tier 4: Dark Mode + Export buttons -->
+      <button id="dark-mode-btn">🌙 Dark Mode</button>
+      <button id="export-btn">📁 Export JSON</button>
+    </div>
+  </header>
+
+  <!-- Notification bar (shows messages like "Task added!") -->
+  <div id="notification" class="notification hidden"></div>
+
+  <main>
+
+    <!-- ADD TASK FORM -->
+    <section class="add-task-section">
+      <form id="task-form">
+        <input type="text" id="task-input" placeholder="Enter a task..." required />
+
+        <!-- Category -->
+        <select id="category-select">
+          <option value="">Loading categories...</option>
+        </select>
+
+        <!-- Priority LVL -->
+        <select id="priority-select">
+          <option value="low">🟢 Low</option>
+          <option value="medium" selected>🟡 Medium</option>
+          <option value="high">🔴 High</option>
+        </select>
+
+        <button type="submit">Add Task</button>
+      </form>
+    </section>
+
+    <!-- FILTER / SEARCH CONTROLS -->
+    <section class="filter-section">
+      <input type="text" id="search-input" placeholder="Search tasks..." />
+      <select id="filter-category">
+        <option value="all">All Categories</option>
+      </select>
+    </section>
+
+    <!-- Loading indicator (shown during async operations) -->
+    <div id="loading" class="hidden">⏳ Loading...</div>
+
+    <!-- TASK LIST (tasks will be rendered here by JS) -->
+    <ul id="task-list"></ul>s
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
