@@ -42,7 +42,7 @@ taskForm.addEventListener('submit', function(event) {
   showNotification('Task added! ✅');
 });
 
-
+//
 // Clears the list and redraws it from the tasks array
 function renderTasks() {
   const searchText       = searchInput.value.toLowerCase();
