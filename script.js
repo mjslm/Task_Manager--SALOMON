@@ -1,7 +1,7 @@
-// All tasks are stored here as an array of objects
+// Holds all tasks in memory
 let tasks = [];
 
-// Grab all the HTML elements we need
+// Get page elements so we can use them
 const taskForm       = document.getElementById('task-form');
 const taskInput      = document.getElementById('task-input');
 const categorySelect = document.getElementById('category-select');
@@ -12,73 +12,71 @@ const filterCategory = document.getElementById('filter-category');
 const taskCounter    = document.getElementById('task-counter');
 const notification   = document.getElementById('notification');
 const loading        = document.getElementById('loading');
+const loadingText    = document.getElementById('loading-text');
 const darkModeBtn    = document.getElementById('dark-mode-btn');
 const exportBtn      = document.getElementById('export-btn');
 
 
-// Runs when the user submits the form
+// Runs when user submits the form
 taskForm.addEventListener('submit', function(event) {
-  event.preventDefault(); // stops the page from reloading on submit
+  event.preventDefault(); // Stop page from reloading
 
   const text = taskInput.value.trim();
-  if (!text) return; // do nothing if the input is empty
+  if (!text) return; // Do nothing if input is empty
 
   // Create a new task object
   const newTask = {
-    id: Date.now(),                          // unique number based on time
+    id: Date.now(),       // Unique ID using current time
     text: text,
     completed: false,
     category: categorySelect.value || 'General',
     priority: prioritySelect.value,
-    timer: 0,                                // countdown seconds (0 = not set)
-    intervalId: null                         // will hold the setInterval ID
+    timer: 0,
+    intervalId: null      // Will hold the timer interval later
   };
 
-  tasks.push(newTask);   // add the new task to the array
-  taskInput.value = '';  // clear the input field
-
-  saveTasks();           // save to localStorage
-  renderTasks();         // refresh the task list on screen
+  tasks.push(newTask);   // Add task to the list
+  taskInput.value = '';  // Clear the input box
+  saveTasks();
+  renderTasks();
   showNotification('Task added! ✅');
 });
 
-//
-// Clears the list and redraws it from the tasks array
+
+// Shows only tasks that match the search and filter
 function renderTasks() {
   const searchText       = searchInput.value.toLowerCase();
   const selectedCategory = filterCategory.value;
 
-  // Keep only tasks that match the search text and selected category
+  // Keep only tasks that match search and category
   const filtered = tasks.filter(task => {
     const matchesSearch   = task.text.toLowerCase().includes(searchText);
     const matchesCategory = selectedCategory === 'all' || task.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  taskList.innerHTML = ''; // clear the current list
-
-  // Build and add each task element to the page
+  taskList.innerHTML = ''; // Clear current list
   filtered.forEach(task => {
-    const li = createTaskElement(task);
-    taskList.appendChild(li);
+    taskList.appendChild(createTaskElement(task)); // Add each task to the page
   });
 
-  updateCounter(); // update the total/done/pending numbers
+  updateCounter(); // Update the task count display
 }
 
 
-// Builds and returns one <li> element for a task
+// Builds the HTML for one task item
 function createTaskElement(task) {
   const li = document.createElement('li');
-  li.classList.add('task-item', `priority-${task.priority}`); // adds priority color
-  if (task.completed) li.classList.add('completed');          // adds strikethrough style
-  li.dataset.id = task.id;                                    // saves the id on the element
+  li.classList.add('task-item', `priority-${task.priority}`);
+  if (task.completed) li.classList.add('completed'); // Gray out if done
+  li.dataset.id = task.id;
 
-  // Set the inner HTML of the task item
+  // Task HTML: checkbox, text, edit button, delete button, timer controls
   li.innerHTML = `
     <div class="task-top">
       <input type="checkbox" ${task.completed ? 'checked' : ''} title="Mark complete" />
-      <span class="task-text" title="Double-click to edit">${task.text}</span>
+      <span class="task-text">${task.text}</span>
+      <button class="btn-edit" title="Edit task">✏️ Edit</button>
       <button class="btn-delete">🗑 Delete</button>
     </div>
     <div class="task-bottom">
@@ -93,63 +91,40 @@ function createTaskElement(task) {
     </div>
   `;
 
-  // Checkbox — marks the task as complete or not
-  const checkbox = li.querySelector('input[type="checkbox"]');
-  checkbox.addEventListener('change', function() {
-    toggleComplete(task.id);
-  });
+  // Attach events to checkbox, edit button, and delete button
+  li.querySelector('input[type="checkbox"]').addEventListener('change', () => toggleComplete(task.id));
+  li.querySelector('.btn-edit').addEventListener('click', () => startEditing(li, task)); // Click pen to edit
+  li.querySelector('.btn-delete').addEventListener('click', () => deleteTask(task.id));
 
-  // Double-click on task text — switches to edit mode
-  const taskText = li.querySelector('.task-text');
-  taskText.addEventListener('dblclick', function() {
-    startEditing(li, task);
-  });
-
-  // Delete button — removes the task
-  const deleteBtn = li.querySelector('.btn-delete');
-  deleteBtn.addEventListener('click', function() {
-    deleteTask(task.id);
-  });
-
-  // Timer elements
   const timerInput   = li.querySelector('.timer-input');
-  const startBtn     = li.querySelector('.btn-start');
-  const pauseBtn     = li.querySelector('.btn-pause');
-  const resetBtn     = li.querySelector('.btn-reset');
   const timerDisplay = li.querySelector('.timer-display');
 
-  // Start — reads the input, then counts down every second using setInterval
-  startBtn.addEventListener('click', function() {
+  // Start button: counts down every second
+  li.querySelector('.btn-start').addEventListener('click', function() {
     const seconds = parseInt(timerInput.value);
-    if (!isNaN(seconds) && seconds > 0) {
-      task.timer = seconds; // save the seconds to the task
-    }
-    if (task.timer <= 0) return; // nothing to count if no time is set
-
-    clearInterval(task.intervalId); // stop any running timer first
-
+    if (!isNaN(seconds) && seconds > 0) task.timer = seconds; // Set timer if input given
+    if (task.timer <= 0) return; // Don't start if no time set
+    clearInterval(task.intervalId); // Clear any running timer first
     task.intervalId = setInterval(function() {
-      task.timer--;                                           // subtract 1 second
-      timerDisplay.textContent = formatTime(task.timer);     // update the display
-
-      if (task.timer <= 10) timerDisplay.classList.add('urgent'); // turn red near zero
-
+      task.timer--;
+      timerDisplay.textContent = formatTime(task.timer);
+      if (task.timer <= 10) timerDisplay.classList.add('urgent'); // Turn red near end
       if (task.timer <= 0) {
-        clearInterval(task.intervalId);                      // stop the interval
+        clearInterval(task.intervalId);
         timerDisplay.textContent = '⏰ Done!';
         showNotification(`⏰ Timer done for: "${task.text}"`);
       }
-    }, 1000); // 1000ms = 1 second
+    }, 1000); // Runs every 1 second
   });
 
-  // Pause — stops the interval but keeps the remaining time
-  pauseBtn.addEventListener('click', function() {
+  // Pause button: stops the countdown
+  li.querySelector('.btn-pause').addEventListener('click', function() {
     clearInterval(task.intervalId);
     task.intervalId = null;
   });
 
-  // Reset — stops the interval and sets time back to zero
-  resetBtn.addEventListener('click', function() {
+  // Reset button: clears the timer back to zero
+  li.querySelector('.btn-reset').addEventListener('click', function() {
     clearInterval(task.intervalId);
     task.intervalId = null;
     task.timer = 0;
@@ -161,60 +136,59 @@ function createTaskElement(task) {
 }
 
 
-// Flips the completed status of a task
+// Marks a task as done or not done
 function toggleComplete(id) {
-  const task = tasks.find(t => t.id === id); // find the task by id
+  const task = tasks.find(t => t.id === id);
   if (task) {
-    task.completed = !task.completed; // true becomes false, false becomes true
+    task.completed = !task.completed; // Flip true/false
     saveTasks();
     renderTasks();
     showNotification(task.completed ? 'Task completed! 🎉' : 'Task reopened.');
   }
 }
 
-
-// Removes a task from the array by id
+// Removes a task from the list
 function deleteTask(id) {
-  tasks = tasks.filter(t => t.id !== id); // keep everything except the deleted one
+  tasks = tasks.filter(t => t.id !== id); // Keep all except the deleted one
   saveTasks();
   renderTasks();
   showNotification('Task deleted. 🗑');
 }
 
-
-// Replaces the task text with an input field so the user can edit it
+// Turns the task text into an editable input when pen button is clicked
 function startEditing(li, task) {
-  const taskText = li.querySelector('.task-text');
+  const taskText  = li.querySelector('.task-text');
+  const editBtn   = li.querySelector('.btn-edit');
+
+  // Don't open a second input if already editing
+  if (li.querySelector('.task-edit-input')) return;
 
   const editInput = document.createElement('input');
-  editInput.type = 'text';
+  editInput.type  = 'text';
   editInput.classList.add('task-edit-input');
-  editInput.value = task.text; // pre-fill with current text
+  editInput.value = task.text;
+  taskText.replaceWith(editInput); // Swap text with input box
+  editBtn.textContent = '💾 Save';  // Change button label to Save
+  editInput.focus();
 
-  taskText.replaceWith(editInput); // swap the span with the input
-  editInput.focus();               // auto-focus so user can type right away
-
-  // Save when the user presses Enter
-  editInput.addEventListener('keydown', function(event) {
-    if (event.key === 'Enter') saveEdit(editInput, task);
+  // Save when Enter is pressed
+  editInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveEdit(editInput, task, editBtn);
   });
 
-  // Save when the user clicks somewhere else
-  editInput.addEventListener('blur', function() {
-    saveEdit(editInput, task);
-  });
+  // Save when clicking the Save button
+  editBtn.addEventListener('click', () => saveEdit(editInput, task, editBtn), { once: true });
 }
 
-// Saves the edited text and redraws the task
-function saveEdit(editInput, task) {
+// Saves the edited task text and restores the pen button
+function saveEdit(editInput, task, editBtn) {
   const newText = editInput.value.trim();
-  if (newText) task.text = newText; // only update if not empty
+  if (newText) task.text = newText; // Only save if not empty
   saveTasks();
   renderTasks();
 }
 
-
-// Updates the task count display in the header
+// Updates the total/done/pending count display
 function updateCounter() {
   const total     = tasks.length;
   const completed = tasks.filter(t => t.completed).length;
@@ -222,163 +196,133 @@ function updateCounter() {
   taskCounter.textContent = `Total: ${total} | Done: ${completed} | Pending: ${pending}`;
 }
 
-
-// Shows a notification message that disappears after 2 seconds
+// Shows a short pop-up message then hides it after 2 seconds
 function showNotification(message) {
   notification.textContent = message;
-  notification.classList.remove('hidden'); // make it visible
+  notification.classList.remove('hidden');
+  setTimeout(() => notification.classList.add('hidden'), 2000);
+}
 
-  setTimeout(function() {
-    notification.classList.add('hidden'); // hide it after 2 seconds
-  }, 2000);
+// Wait 300ms after typing before searching (avoids too many calls)
+let debounceTimer;
+searchInput.addEventListener('input', function() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(renderTasks, 300);
+});
+
+// Re-render when category filter changes
+filterCategory.addEventListener('change', renderTasks);
+
+
+// Shows or hides the loading bar
+function showLoading(state) {
+  // state: 'loading' | 'error' | 'hidden'
+  loading.classList.remove('hidden', 'error');
+  if (state === 'hidden') {
+    loading.classList.add('hidden');
+  } else if (state === 'error') {
+    loading.classList.add('error');
+    loadingText.textContent = '⚠️ Could not load categories. Using defaults.';
+    setTimeout(() => loading.classList.add('hidden'), 3000);
+  } else {
+    loadingText.textContent = 'Loading categories...';
+  }
 }
 
 
-// Debounce: waits 300ms after the user stops typing before searching
-let debounceTimer;
-
-searchInput.addEventListener('input', function() {
-  clearTimeout(debounceTimer);              // cancel the previous wait
-
-  debounceTimer = setTimeout(function() {
-    renderTasks();                          // search runs only after 300ms pause
-  }, 300);
-});
-
-
-// Re-renders the list whenever the category filter changes
-filterCategory.addEventListener('change', function() {
-  renderTasks();
-});
-
-
-// Fetches category names from the API and fills the dropdowns
+// Fetches categories from the internet, uses defaults if it fails
 async function loadCategories() {
-  showLoading(true);
+  showLoading('loading');
+  categorySelect.disabled = true; // Disable while loading
 
   try {
-    const response = await fetch('https://jsonplaceholder.typicode.com/users'); // call the API
-    const users    = await response.json();                                      // convert to JS object
+    // Get data from a test API
+    const response = await fetch('https://jsonplaceholder.typicode.com/users');
+    const users    = await response.json();
 
-    // Use school-related names instead of the API usernames
     const schoolCategories = ['Assignment', 'Project', 'Exam', 'Laboratory', 'Research'];
-    const categories = users.slice(0, 5).map((_, i) => schoolCategories[i]);
+    const categories = users.slice(0, 5).map((_, i) => schoolCategories[i]); // Take first 5
 
-    // Fill the "Add Task" category dropdown
+    // Fill the category dropdown
     categorySelect.innerHTML = '';
     categories.forEach(cat => {
-      const option = document.createElement('option');
-      option.value = cat;
-      option.textContent = cat;
-      categorySelect.appendChild(option);
+      const opt = document.createElement('option');
+      opt.value = cat; opt.textContent = cat;
+      categorySelect.appendChild(opt);
     });
 
-    // Fill the filter dropdown
+    // Fill the filter dropdown too
     filterCategory.innerHTML = '<option value="all">All Categories</option>';
     categories.forEach(cat => {
-      const option = document.createElement('option');
-      option.value = cat;
-      option.textContent = cat;
-      filterCategory.appendChild(option);
+      const opt = document.createElement('option');
+      opt.value = cat; opt.textContent = cat;
+      filterCategory.appendChild(opt);
     });
 
+    showLoading('hidden');
+
   } catch (error) {
-    // If the fetch fails, use hardcoded fallback categories
+    // If fetch fails, use hardcoded defaults
     console.error('Failed to load categories:', error);
-    showNotification('⚠️ Could not load categories. Using defaults.');
+    showLoading('error');
 
     const defaults = ['Work', 'Personal', 'School', 'Health', 'Other'];
     categorySelect.innerHTML = '';
-    defaults.forEach(cat => {
-      categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-    });
-
+    defaults.forEach(cat => { categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`; });
     filterCategory.innerHTML = '<option value="all">All Categories</option>';
-    defaults.forEach(cat => {
-      filterCategory.innerHTML += `<option value="${cat}">${cat}</option>`;
-    });
+    defaults.forEach(cat => { filterCategory.innerHTML += `<option value="${cat}">${cat}</option>`; });
   }
 
-  showLoading(false); // hide the loader when done
+  categorySelect.disabled = false; // Re-enable after loading
 }
 
 
-// Shows or hides the loading indicator
-function showLoading(isLoading) {
-  if (isLoading) {
-    loading.classList.remove('hidden');
-  } else {
-    loading.classList.add('hidden');
-  }
-}
-
-
-// Converts a number of seconds into "m:ss" format (e.g. 65 → "1:05")
+// Converts seconds into mm:ss format (e.g. 90 → 1:30)
 function formatTime(seconds) {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`; // padStart adds a leading zero if needed
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-
-// Dark mode — toggles the "dark" class on <body>
+// Toggles dark/light mode on button click
 darkModeBtn.addEventListener('click', function() {
   document.body.classList.toggle('dark');
-
   const isDark = document.body.classList.contains('dark');
-  darkModeBtn.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode'; // update button label
+  darkModeBtn.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
 });
 
-
-// Saves the tasks array to localStorage as a JSON string
+// Saves tasks to localStorage so they survive page refresh
 function saveTasks() {
-  return new Promise(function(resolve) {
-    // We can't save intervalId (it's a live reference), so we set it to null before saving
-    const saveable = tasks.map(function(t) {
-      return { ...t, intervalId: null, timer: 0 };
-    });
-    localStorage.setItem('tasks', JSON.stringify(saveable)); // store as string
+  return new Promise(resolve => {
+    const saveable = tasks.map(t => ({ ...t, intervalId: null, timer: 0 })); // Don't save timer state
+    localStorage.setItem('tasks', JSON.stringify(saveable));
     resolve();
   });
 }
 
-// Loads saved tasks from localStorage back into the tasks array
+// Loads tasks from localStorage when the page opens
 function loadTasks() {
-  return new Promise(function(resolve) {
+  return new Promise(resolve => {
     const stored = localStorage.getItem('tasks');
-    if (stored) {
-      tasks = JSON.parse(stored); // convert JSON string back to array
-    }
+    if (stored) tasks = JSON.parse(stored); // Restore saved tasks
     resolve();
   });
 }
 
-
-// Export button — downloads all tasks as a tasks.json file
+// Downloads all tasks as a JSON file
 exportBtn.addEventListener('click', function() {
-  if (tasks.length === 0) {
-    showNotification('No tasks to export!');
-    return;
-  }
-
-  const jsonString = JSON.stringify(tasks, null, 2); // format the array as readable JSON
-
-  // Create a temporary download link and click it to trigger the download
-  const blob = new Blob([jsonString], { type: 'application/json' });
+  if (tasks.length === 0) { showNotification('No tasks to export!'); return; }
+  const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href     = url;
-  a.download = 'tasks.json';
-  a.click();
-
-  URL.revokeObjectURL(url); // clean up the temporary URL
+  a.href = url; a.download = 'tasks.json'; a.click(); // Trigger download
+  URL.revokeObjectURL(url);
   showNotification('Tasks exported! 📁');
 });
 
-
-// Runs on page load — loads saved tasks, fetches categories, then draws the list
+// Runs everything on page load in the correct order
 (async function init() {
-  await loadTasks();      // get tasks from localStorage
-  await loadCategories(); // get categories from the API
-  renderTasks();          // draw everything on screen
+  await loadTasks();      // Load saved tasks first
+  await loadCategories(); // Then load categories
+  renderTasks();          // Then show tasks on screen
 })();

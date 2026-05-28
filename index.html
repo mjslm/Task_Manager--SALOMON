@@ -12,39 +12,30 @@
     <h1>📋 Task Manager</h1>
     <div class="header-right">
       <div id="task-counter">Total: 0 | Done: 0 | Pending: 0</div>
-      <!-- Tier 4: Dark Mode + Export buttons -->
       <button id="dark-mode-btn">🌙 Dark Mode</button>
       <button id="export-btn">📁 Export JSON</button>
     </div>
   </header>
 
-  <!-- Notification bar (shows messages like "Task added!") -->
   <div id="notification" class="notification hidden"></div>
 
   <main>
 
-    <!-- ADD TASK FORM -->
     <section class="add-task-section">
       <form id="task-form">
         <input type="text" id="task-input" placeholder="Enter a task..." required />
-
-        <!-- Category -->
         <select id="category-select">
           <option value="">Loading categories...</option>
         </select>
-
-        <!-- Priority LVL -->
         <select id="priority-select">
           <option value="low">🟢 Low</option>
           <option value="medium" selected>🟡 Medium</option>
           <option value="high">🔴 High</option>
         </select>
-
         <button type="submit">Add Task</button>
       </form>
     </section>
 
-    <!-- FILTER / SEARCH CONTROLS -->
     <section class="filter-section">
       <input type="text" id="search-input" placeholder="Search tasks..." />
       <select id="filter-category">
@@ -52,11 +43,15 @@
       </select>
     </section>
 
-    <!-- Loading indicator (shown during async operations) -->
-    <div id="loading" class="hidden">⏳ Loading...</div>
+    <!-- Simple loading bar shown during fetch -->
+    <div id="loading" class="hidden">
+      <div class="loading-bar-track">
+        <div class="loading-bar-fill"></div>
+      </div>
+      <span id="loading-text">Loading categories...</span>
+    </div>
 
-    <!-- TASK LIST (tasks will be rendered here by JS) -->
-    <ul id="task-list"></ul>s
+    <ul id="task-list"></ul>
 
   </main>
 
